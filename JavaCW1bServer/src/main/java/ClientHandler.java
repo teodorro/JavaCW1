@@ -15,10 +15,14 @@ public class ClientHandler extends Thread {
     public ExecutorService es = Executors.newFixedThreadPool(3);
     private PriorityBlockingQueue<String> messages = new PriorityBlockingQueue<>();
     private String clientName = "";
+    private Logger logger;
 
-    public ClientHandler(SocketChannel socketChannel, List<ClientHandler> clientHandlers) {
+
+    public ClientHandler(SocketChannel socketChannel, List<ClientHandler> clientHandlers, Logger logger) {
         this.socketChannel = socketChannel;
         this.clientHandlers = clientHandlers;
+        this.logger = logger;
+
         inputBuffer = ByteBuffer.allocate(2 << 10);
         initOutStream();
         initInStream();
@@ -63,11 +67,13 @@ public class ClientHandler extends Thread {
             if (clientHandlers.stream().noneMatch(x -> x.clientName.equals(msg))){
                 clientName = msg;
                 sendMessage(NAME_ACCEPTED);
+                logger.log(clientName + " logged in");
             } else {
                 sendMessage("This name is busy");
             }
         } else {
             messages.add(msg);
+            logger.log(msg);
         }
 
         inputBuffer.clear();

@@ -12,6 +12,7 @@ public class Client {
     private final String EXIT = "/exit";
     private final String LOCALHOST = "localhost";
     private final String NAME_ACCEPTED = "Name accepted";
+    private final static String FILELOG = "file.log";
 
     private ExecutorService es = Executors.newFixedThreadPool(3);
     private SocketChannel socketChannel;
@@ -19,6 +20,7 @@ public class Client {
     private Scanner scanner = new Scanner(System.in);
     private boolean isNameAccepted = false;
     private String name;
+    private Logger logger = new Logger(FILELOG);
 
 
     public static void main(String[] args) {
@@ -83,6 +85,8 @@ public class Client {
         }
         String msg = new String(inputBuffer.array(), 0, bytesCount, StandardCharsets.UTF_8).trim();
         System.out.println(msg);
+        logger.log(msg);
+
         if (NAME_ACCEPTED.equals(msg)) {
             isNameAccepted = true;
         }
@@ -102,6 +106,7 @@ public class Client {
             msg = "[" + LocalDateTime.now().toLocalDate() + " " + LocalDateTime.now().withNano(0).toLocalTime() + "] " + name + ": " + msg;
         else
             name = msg;
+        logger.log(msg);
 
         if (!socketChannel.isOpen())
             return false;

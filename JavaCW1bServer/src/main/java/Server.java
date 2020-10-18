@@ -7,9 +7,11 @@ import java.util.*;
 public class Server {
 
     private final static String LOCALHOST = "localhost";
+    private final static String FILELOG = "file.log";
     private Set<String> clientNames = new HashSet<>();
     private ServerSocketChannel serverChannel;
     private List<ClientHandler> clients = new ArrayList<>();
+    private Logger logger = new Logger(FILELOG);
 
 
 
@@ -22,8 +24,8 @@ public class Server {
         openChannel(LOCALHOST, port);
         while (true) {
             try {
-                SocketChannel sc = serverChannel.accept();
-                ClientHandler clientHandler = new ClientHandler(sc, clients);
+                SocketChannel socketChannel = serverChannel.accept();
+                ClientHandler clientHandler = new ClientHandler(socketChannel, clients, logger);
                 clientHandler.start();
                 clients.add(clientHandler);
             } catch (IOException e) {
