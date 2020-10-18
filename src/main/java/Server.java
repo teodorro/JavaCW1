@@ -28,7 +28,6 @@ public class Server {
                 clients.add(clientHandler);
             } catch (IOException e) {
                 e.printStackTrace();
-                System.out.println( e.getMessage());
             }
         }
     }
@@ -46,7 +45,6 @@ public class Server {
             serverChannel.bind(new InetSocketAddress(ip, port));
         } catch (IOException e) {
             e.printStackTrace();
-            System.out.println(e.getMessage());
         }
     }
 
