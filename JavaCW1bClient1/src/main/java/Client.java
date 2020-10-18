@@ -7,13 +7,11 @@ import java.time.LocalDateTime;
 import java.util.Scanner;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import java.util.concurrent.TimeUnit;
 
 public class Client {
     private final String EXIT = "/exit";
     private final String LOCALHOST = "localhost";
     private final String NAME_ACCEPTED = "Name accepted";
-    public static final int TIMEOUT = 2;
 
     private ExecutorService es = Executors.newFixedThreadPool(3);
     private SocketChannel socketChannel;
