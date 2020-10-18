@@ -1,23 +1,15 @@
 import java.io.IOException;
 import java.net.InetSocketAddress;
-import java.nio.ByteBuffer;
 import java.nio.channels.ServerSocketChannel;
 import java.nio.channels.SocketChannel;
-import java.nio.charset.StandardCharsets;
-import java.util.HashSet;
-import java.util.Scanner;
-import java.util.Set;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.PriorityBlockingQueue;
+import java.util.*;
 
 public class Server {
-    public static final int MAX_CLIENTS = 10;
 
-    private String hostname = "localhost";
+    private final static String LOCALHOST = "localhost";
     private Set<String> clientNames = new HashSet<>();
-    private PriorityBlockingQueue<String> clients = new PriorityBlockingQueue<>();
-    private ExecutorService es = Executors.newFixedThreadPool(MAX_CLIENTS + 1);
+    private ServerSocketChannel serverChannel;
+    private List<ClientHandler> clients = new ArrayList<>();
 
 
 
@@ -27,9 +19,19 @@ public class Server {
 
     private void start() {
         int port = getPort();
-        setUpChannel(port);
+        openChannel(LOCALHOST, port);
+        while (true) {
+            try {
+                SocketChannel sc = serverChannel.accept();
+                ClientHandler clientHandler = new ClientHandler(sc, clients);
+                clientHandler.start();
+                clients.add(clientHandler);
+            } catch (IOException e) {
+                e.printStackTrace();
+                System.out.println( e.getMessage());
+            }
+        }
     }
-
 
     private int getPort(){
         Settings settings = new SettingsJson();
@@ -37,39 +39,14 @@ public class Server {
         return settings.getPort();
     }
 
-    private void setUpChannel(int port){
+    public void openChannel(String ip, int port)  {
+        serverChannel = null;
         try {
-            final ServerSocketChannel serverChannel = ServerSocketChannel.open();
-            serverChannel.bind(new InetSocketAddress(hostname, port));
-            while (true) {
-                try (SocketChannel socketChannel = serverChannel.accept()) {
-
-                    continuousTransferMessages(socketChannel);
-
-                } catch (IOException err) {
-                    System.out.println(err.getMessage());
-                }
-            }
+            serverChannel = ServerSocketChannel.open();
+            serverChannel.bind(new InetSocketAddress(ip, port));
         } catch (IOException e) {
             e.printStackTrace();
-        }
-    }
-
-    private void continuousTransferMessages(SocketChannel socketChannel) throws IOException {
-        final ByteBuffer inputBuffer = ByteBuffer.allocate(2 << 10);
-        try (Scanner scanner = new Scanner(System.in)) {
-            while (socketChannel.isConnected()) {
-                System.out.println("write smth");
-                String msg1 = scanner.nextLine();
-                socketChannel.write(ByteBuffer.wrap(msg1.getBytes(StandardCharsets.UTF_8)));
-//                int bytesCount = socketChannel.read(inputBuffer);
-//                if (bytesCount == -1) break;
-//                final String msg = new String(inputBuffer.array(), 0, bytesCount, StandardCharsets.UTF_8);
-                inputBuffer.clear();
-//
-//                System.out.println(msg);
-//                socketChannel.write(ByteBuffer.wrap(("Server: " + msg).getBytes(StandardCharsets.UTF_8)));
-            }
+            System.out.println(e.getMessage());
         }
     }
 

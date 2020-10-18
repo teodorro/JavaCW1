@@ -4,9 +4,15 @@ import java.nio.ByteBuffer;
 import java.nio.channels.SocketChannel;
 import java.nio.charset.StandardCharsets;
 import java.util.Scanner;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 public class Client {
-    private String hostname = "localhost";
+    private String LOCALHOST = "localhost";
+    public ExecutorService es = Executors.newFixedThreadPool(3);
+    private SocketChannel socketChannel;
+    private ByteBuffer inputBuffer;
+    private Scanner scanner = new Scanner(System.in);
 
     public static void main(String[] args) {
         new Client().start();
@@ -14,7 +20,9 @@ public class Client {
 
     public void start(){
         int port = getPort();
-        setUpChannel(port);
+        openChannel(LOCALHOST, port);
+        this.initOutStream();
+        this.initInStream();
     }
 
     private int getPort(){
@@ -23,26 +31,66 @@ public class Client {
         return settings.getPort();
     }
 
-    private void setUpChannel(int port){
-        try {
-            InetSocketAddress socketAddress = new InetSocketAddress("localhost", port);
-            final SocketChannel socketChannel = SocketChannel.open();
-            socketChannel.connect(socketAddress);
-            try (Scanner scanner = new Scanner(System.in)) {
-                final ByteBuffer inputBuffer = ByteBuffer.allocate(2 << 10);
-                while (true) {
-//                    String msg = scanner.nextLine();
-//                    socketChannel.write(ByteBuffer.wrap(msg.getBytes(StandardCharsets.UTF_8)));
-                    int bytesCount = socketChannel.read(inputBuffer);
-                    System.out.println(new String(inputBuffer.array(), 0, bytesCount, StandardCharsets.UTF_8).trim());
-                    inputBuffer.clear();
-                }
 
-            } finally {
-                socketChannel.close();
+    public void initInStream(){
+        es.submit(() -> {
+            while(socketChannel.isConnected()){
+                readMessage();
             }
+        });
+    }
+
+    public void initOutStream(){
+        es.submit(() -> {
+            while(socketChannel.isConnected()){
+                sendMessage();
+            }
+        });
+    }
+
+    public void openChannel(String ip, int port) {
+        try {
+            InetSocketAddress socketAddress = new InetSocketAddress(ip, port);
+            socketChannel = SocketChannel.open();
+            socketChannel.connect(socketAddress);
+            inputBuffer = ByteBuffer.allocate(2 << 10);
         } catch (IOException e) {
             e.printStackTrace();
+            System.out.println(e.getMessage());
+        }
+    }
+
+    public void readMessage(){
+        int bytesCount = 0;
+        try {
+            bytesCount = socketChannel.read(inputBuffer);
+        } catch (IOException e) {
+            e.printStackTrace();
+            System.out.println(e.getMessage());
+        }
+        System.out.println(new String(inputBuffer.array(), 0, bytesCount, StandardCharsets.UTF_8).trim());
+        inputBuffer.clear();
+    }
+
+    public void sendMessage() {
+        String msg = scanner.nextLine();
+        if ("exit".equals(msg)){
+            stopConnection();
+        }
+        try {
+            socketChannel.write(ByteBuffer.wrap(msg.getBytes(StandardCharsets.UTF_8)));
+        } catch (IOException e) {
+            e.printStackTrace();
+            System.out.println(e.getMessage());
+        }
+    }
+
+    public void stopConnection() {
+        try {
+            socketChannel.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+            System.out.println(e.getMessage());
         }
     }
 }
