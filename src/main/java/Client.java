@@ -21,8 +21,8 @@ public class Client {
     public void start(){
         int port = getPort();
         openChannel(LOCALHOST, port);
-        this.initOutStream();
-        this.initInStream();
+        initOutStream();
+        initInStream();
     }
 
     private int getPort(){
@@ -31,8 +31,7 @@ public class Client {
         return settings.getPort();
     }
 
-
-    public void initInStream(){
+    private void initInStream(){
         es.submit(() -> {
             while(socketChannel.isConnected()){
                 readMessage();
@@ -40,7 +39,7 @@ public class Client {
         });
     }
 
-    public void initOutStream(){
+    private void initOutStream(){
         es.submit(() -> {
             while(socketChannel.isConnected()){
                 sendMessage();
@@ -48,7 +47,7 @@ public class Client {
         });
     }
 
-    public void openChannel(String ip, int port) {
+    private void openChannel(String ip, int port) {
         try {
             InetSocketAddress socketAddress = new InetSocketAddress(ip, port);
             socketChannel = SocketChannel.open();
@@ -60,7 +59,7 @@ public class Client {
         }
     }
 
-    public void readMessage(){
+    private void readMessage(){
         int bytesCount = 0;
         try {
             bytesCount = socketChannel.read(inputBuffer);
@@ -72,7 +71,7 @@ public class Client {
         inputBuffer.clear();
     }
 
-    public void sendMessage() {
+    private void sendMessage() {
         String msg = scanner.nextLine();
         if ("exit".equals(msg)){
             stopConnection();
@@ -85,7 +84,7 @@ public class Client {
         }
     }
 
-    public void stopConnection() {
+    private void stopConnection() {
         try {
             socketChannel.close();
         } catch (IOException e) {

@@ -39,7 +39,7 @@ public class Server {
         return settings.getPort();
     }
 
-    public void openChannel(String ip, int port)  {
+    private void openChannel(String ip, int port)  {
         serverChannel = null;
         try {
             serverChannel = ServerSocketChannel.open();
@@ -49,6 +49,5 @@ public class Server {
             System.out.println(e.getMessage());
         }
     }
-
 
 }

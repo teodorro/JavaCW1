@@ -23,7 +23,7 @@ public class ClientHandler extends Thread {
     }
 
 
-    public void initInStream(){
+    private void initInStream(){
         es.submit(() -> {
             while(socketChannel.isConnected()){
                 readMessage();
@@ -31,7 +31,7 @@ public class ClientHandler extends Thread {
         });
     }
 
-    public void initOutStream(){
+    private void initOutStream(){
         es.submit(() -> {
             while(socketChannel.isConnected()){
                 sendMessages();
@@ -39,7 +39,7 @@ public class ClientHandler extends Thread {
         });
     }
 
-    public void readMessage(){
+    private void readMessage(){
         int bytesCount = 0;
         try {
             bytesCount = socketChannel.read(inputBuffer);
@@ -53,7 +53,7 @@ public class ClientHandler extends Thread {
         inputBuffer.clear();
     }
 
-    public void sendMessages() {
+    private void sendMessages() {
         try {
             String msg = messages.take();
             clients.stream().filter(x -> x != this).forEach(client -> client.sendMessage(msg));
@@ -63,7 +63,7 @@ public class ClientHandler extends Thread {
         }
     }
 
-    public void sendMessage(String message){
+    private void sendMessage(String message){
         try {
             if (message == null || message.isBlank())
                 return;
